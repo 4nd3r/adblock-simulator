@@ -11,39 +11,39 @@ from publicsuffixlist import PublicSuffixList
 
 
 class AdblockSimulator:
-    def add_filters(self, filters_list, fmt='standard'):
-        for filters in filters_list:
-            if os.path.isfile(filters):
-                if not self.add_filters_from_file(filters, fmt):
+    def add_filter_list(self, filter_list, fmt='standard'):
+        for item in filter_list:
+            if os.path.isfile(item):
+                if not self.add_filter_list_from_file(item, fmt):
                     return False
-            elif isinstance(filters, str):
-                if not self.add_filters_from_string(filters, fmt):
+            elif isinstance(item, str):
+                if not self.add_filter_list_from_string(item, fmt):
                     return False
             else:
                 return False
         return True
 
     def add_hosts(self, hosts):
-        return self.add_filters(hosts, 'hosts')
+        return self.add_filter_list(hosts, 'hosts')
 
-    def add_filters_from_file(self, filters_file, fmt='standard'):
+    def add_filter_list_from_file(self, filter_list_file, fmt='standard'):
         try:
-            handle = open(filters_file, 'r')
-            filters = handle.read()
+            handle = open(filter_list_file, 'r')
+            filter_list_string = handle.read()
             handle.close()
         except Exception:
             return False
-        return self.add_filters_from_string(filters, fmt)
+        return self.add_filter_list_from_string(filter_list_string, fmt)
 
-    filter_set = None
-    engine = None
+    _filter_set = None
+    _engine = None
 
-    def add_filters_from_string(self, filters_string, fmt='standard'):
+    def add_filter_list_from_string(self, filter_list_string, fmt='standard'):
         try:
-            if self.filter_set is None:
-                self.filter_set = adblock.FilterSet()
-            self.filter_set.add_filter_list(filters_string, fmt)
-            self.engine = adblock.Engine(filter_set=self.filter_set)
+            if self._filter_set is None:
+                self._filter_set = adblock.FilterSet()
+            self._filter_set.add_filter_list(filter_list_string, fmt)
+            self._engine = adblock.Engine(filter_set=self._filter_set)
         except Exception:
             return False
         return True
@@ -84,21 +84,21 @@ class AdblockSimulator:
                 return False
         src_url = self._prepend_url_scheme(src_url)
         dst_urls = []
-        for dst_urls_list_item in dst_urls_list:
-            if os.path.isfile(dst_urls_list_item):
+        for item in dst_urls_list:
+            if os.path.isfile(item):
                 try:
-                    handle = open(dst_urls_list_item, 'r')
+                    handle = open(item, 'r')
                     for line in handle:
                         dst_urls.append(line.strip())
                     handle.close()
                 except Exception:
                     return False
-            elif isinstance(dst_urls_list_item, str):
-                dst_urls.append(dst_urls_list_item)
+            elif isinstance(item, str):
+                dst_urls.append(item)
         results = {}
         for dst_url in sorted(dst_urls, key=self._url_sort_key):
             dst_url = self._prepend_url_scheme(dst_url)
-            blocker = self.engine.check_network_urls(
+            blocker = self._engine.check_network_urls(
                 url=dst_url,
                 source_url=src_url,
                 request_type='')
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         cli.error('one of the following arguments is required: -f, -h')
     AS = AdblockSimulator()
     if args.f:
-        AS.add_filters(args.f)
+        AS.add_filter_list(args.f)
     if args.h:
         AS.add_hosts(args.h)
     results = AS.simulate(args.s, args.d)

@@ -2,7 +2,7 @@
 
 ./adblock_simulator.py \
     -f '||example.net^' \
-    -f 'test.filters' \
+    -f 'test.filter_list' \
     -h '0.0.0.0 example.org' \
     -h 'test.hosts' \
     -s 'example.com' \
