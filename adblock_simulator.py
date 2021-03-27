@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import sys
 import urllib.parse
 
 import adblock
@@ -121,10 +122,17 @@ if __name__ == '__main__':
         cli.error('one of the following arguments is required: -f, -h')
     AS = AdblockSimulator()
     if args.f:
-        AS.add_filter_list(args.f)
+        if not AS.add_filter_list(args.f):
+            print('adding filter list failed')
+            sys.exit(1)
     if args.h:
-        AS.add_hosts(args.h)
+        if not AS.add_hosts(args.h):
+            print('adding hosts failed')
+            sys.exit(1)
     results = AS.simulate(args.s, args.d)
+    if not results:
+        print('simulation failed')
+        sys.exit(1)
     if args.r:
         for result in results.copy():
             if not re.search(args.r, result):
